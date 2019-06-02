@@ -1,2 +1,7 @@
+.bloop
+.metals
+project
+target
+
 *.class
 *.log
