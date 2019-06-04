@@ -73,7 +73,7 @@ trait VideosEndpoint[F[_]] extends Endpoint[F] {
     first: Int = 20
   ): F[ResponseHolderPage[List[TwitchVideo]]] =
     for {
-      env <- applicaveAsk.ask
+      env <- applicativeAsk.ask
       request = sttp.get(uri"$videosUrl?first=$first&after=$after&before=$before&language=$language&period=${period.repr}&sort=${sort.repr}&type=${tpe.map(_.repr).getOrElse("all")}")
       maybeHttpResponse <- monadError.attempt(request.twitchAuth(env).send())
       result <- parseHttpResponse[ResponseHolderPage[List[TwitchVideo]]](maybeHttpResponse)

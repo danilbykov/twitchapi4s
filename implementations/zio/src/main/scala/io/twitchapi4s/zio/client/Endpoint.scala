@@ -28,7 +28,7 @@ class Endpoint(
 
   override val monadError = implicitly[MonadError[Effect, TwitchApiException]]
 
-  override val applicaveAsk = implicitly[ApplicativeAsk[Effect, TwitchEnv]]
+  override val applicativeAsk = implicitly[ApplicativeAsk[Effect, TwitchEnv]]
 
 
   override val sttpBackend = new SttpBackend[Effect, Nothing] {
@@ -54,3 +54,9 @@ class Endpoint(
     }
   }
 }
+
+trait GamesEndpoint extends baseclient.GamesEndpoint[Effect]
+
+trait UsersEndpoint extends baseclient.UsersEndpoint[Effect]
+
+trait StreamsEndpoint extends baseclient.StreamsEndpoint[Effect]

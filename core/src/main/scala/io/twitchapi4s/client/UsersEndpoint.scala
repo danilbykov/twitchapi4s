@@ -70,7 +70,7 @@ trait UsersEndpoint[F[_]] extends Endpoint[F] {
 
   def getUsers(ids: List[String], logins: List[String]): F[List[TwitchUser]] =
     for {
-      env <- applicaveAsk.ask
+      env <- applicativeAsk.ask
       request = sttp.get(uri"$usersUrl?id=$ids&login=$logins").twitchAuth(env)
       maybeHttpResponse <- monadError.attempt(request.send())
       result <- parseHttpResponse[ResponseHolder[List[TwitchUser]]](maybeHttpResponse)
@@ -83,7 +83,7 @@ trait UsersEndpoint[F[_]] extends Endpoint[F] {
     first: Int = 20
   ): F[ResponseHolderPage[List[TwitchFollow]]] =
     for {
-      env <- applicaveAsk.ask
+      env <- applicativeAsk.ask
       request = sttp.get(uri"$usersFollowsUrl?from_id=$fromId&to_id=$toId&first=$first&after=$after")
       maybeHttpResponse <- monadError.attempt(request.twitchAuth(env).send())
       result <- parseHttpResponse[ResponseHolderPage[List[TwitchFollow]]](maybeHttpResponse)

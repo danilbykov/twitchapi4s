@@ -12,7 +12,7 @@ case class ResponseHolder[D](
 case class Pagination(cursor: String)
 case class ResponseHolderPage[D](
   data: D,
-  total: Int,
+  //total: Int,
   pagination: Pagination
 )
 case class FailureResponse(

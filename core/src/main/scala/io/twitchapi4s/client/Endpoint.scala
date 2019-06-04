@@ -38,9 +38,9 @@ object Endpoint {
     final def apply(c: HCursor): Decoder.Result[ResponseHolderPage[D]] =
       for {
         data <- c.downField("data").as[D]
-        total <- c.downField("total").as[Int]
+        //total <- c.downField("total").as[Int]
         pagination <- c.downField("pagination").as[Pagination]
-      } yield ResponseHolderPage(data, total, pagination)
+      } yield ResponseHolderPage(data/*, total*/, pagination)
   }
 
   val defaultFormatter = DateTimeFormatter.ISO_INSTANT
@@ -57,7 +57,7 @@ object Endpoint {
 trait Endpoint[F[_]] {
 
   implicit val monadError: MonadError[F, TwitchApiException]
-  implicit val applicaveAsk: ApplicativeAsk[F, TwitchEnv]
+  implicit val applicativeAsk: ApplicativeAsk[F, TwitchEnv]
 
   implicit val sttpBackend: SttpBackend[F, Nothing]
 

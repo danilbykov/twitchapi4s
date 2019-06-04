@@ -41,18 +41,18 @@ case object Highlight extends VideoType("highlight")
   * @param duration     Length of the video
   */
 case class TwitchVideo(
-    id: String,
-    userId: String,
-    userName: String,
-    title: String,
-    description: String,
-    createdAt: Instant,
-    publishedAt: Instant,
-    url: String,
-    thumbnailUrl: String,
-    viewable: ViewableType,
-    viewCount: Int,
-    language: String,
-    videoType: VideoType,
-    duration: Duration
+  id: String,
+  userId: String,
+  userName: String,
+  title: String,
+  description: String,
+  createdAt: Instant,
+  publishedAt: Instant,
+  url: String,
+  thumbnailUrl: String,
+  viewable: ViewableType,
+  viewCount: Int,
+  language: String,
+  videoType: VideoType,
+  duration: Duration
 )

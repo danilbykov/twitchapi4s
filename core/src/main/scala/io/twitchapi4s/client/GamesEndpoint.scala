@@ -30,23 +30,23 @@ trait GamesEndpoint[F[_]] extends Endpoint[F] {
   val gamesUrl = s"${root}helix/games"
   val topGamesUrl = s"${root}helix/games/top"
 
-  def games(ids: List[String], names: List[String]): F[List[TwitchGame]] =
+  def getGames(ids: List[String], names: List[String]): F[List[TwitchGame]] =
     for {
-      env <- applicaveAsk.ask
-      request = sttp.get(uri"$gamesUrl?id=$ids&names=$names").twitchAuth(env)
+      env <- applicativeAsk.ask
+      request = sttp.get(uri"$gamesUrl?id=$ids&name=$names").twitchAuth(env)
       maybeHttpResponse <- monadError.attempt(request.send())
       result <- parseHttpResponse[ResponseHolder[List[TwitchGame]]](maybeHttpResponse)
     } yield result.data
 
-  def topGames(
+  def getTopGames(
     after: Option[String] = None,
     before: Option[String] = None,
     first: Int = 20
   ): F[ResponseHolderPage[List[TwitchGame]]] =
     for {
-      env <- applicaveAsk.ask
+      env <- applicativeAsk.ask
       request = sttp.get(uri"$topGamesUrl?first=$first&before=$before&after=$after")
-      maybeHttpResponse <- monadError.attempt(request.send())
+      maybeHttpResponse <- monadError.attempt(request.twitchAuth(env).send())
       result <- parseHttpResponse[ResponseHolderPage[List[TwitchGame]]](maybeHttpResponse)
     } yield result
 }
