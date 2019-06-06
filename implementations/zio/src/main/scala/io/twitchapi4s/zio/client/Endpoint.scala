@@ -1,62 +1,78 @@
 package io.twitchapi4s.zio.client
 
-import io.twitchapi4s.{client => baseclient}
-import scalaz.zio.ZIO
-import scalaz.zio.IO
-import io.twitchapi4s.TwitchEnv
-import com.softwaremill.sttp.SttpBackend
-import cats.MonadError
-import cats.mtl.ApplicativeAsk
-import scalaz.zio.interop.catz._
-import scalaz.zio.interop.catz.mtl._
-import io.twitchapi4s.TwitchApiException
-    import com.softwaremill.sttp.Response
-    import com.softwaremill.sttp.Request
-    import io.twitchapi4s.TwitchConnectionException
 import scala.util.control.NonFatal
 
-object Endpoint {
-  type Effect[A] = ZIO[TwitchEnv, TwitchApiException, A]
+import cats.Monad
+import cats.MonadError
+import cats.mtl.MonadState
+import com.softwaremill.sttp.Response
+import com.softwaremill.sttp.Request
+import com.softwaremill.sttp.SttpBackend
+import scalaz.zio.Ref
+import scalaz.zio.Task
+import scalaz.zio.ZIO
+import scalaz.zio.interop.catz._
 
-  type IOThrowable[A] = ZIO[Any, Throwable, A]
+import io.twitchapi4s.RecoverableTwitchEnv
+import io.twitchapi4s.TwitchApiException
+import io.twitchapi4s.TwitchConnectionException
+import io.twitchapi4s.{client => baseclient}
+
+trait State[S] {
+  def state: Ref[S]
+}
+
+object Endpoint {
+  type Effect[R, A] = ZIO[R, TwitchApiException, A]
+
+  implicit def zioMonadState[S, R <: State[S], E]: MonadState[ZIO[R, E, ?], S] =
+    new MonadState[ZIO[R, E, ?], S] {
+      val monad: Monad[ZIO[R, E, ?]] = implicitly[Monad[ZIO[R, E, ?]]]
+
+      def get: ZIO[R, E, S] = ZIO.accessM(_.state.get)
+
+      def set(s: S): ZIO[R, E, Unit] = ZIO.accessM(_.state.set(s).unit)
+
+      def inspect[A](f: S => A): ZIO[R, E, A] = ZIO.accessM(_.state.get.map(f))
+
+      def modify(f: S => S): ZIO[R, E, Unit] = ZIO.accessM(_.state.update(f).unit)
+    }
 }
 
 import Endpoint._
-class Endpoint(
-  backend: SttpBackend[IOThrowable, Nothing]
-) extends baseclient.Endpoint[Effect] {
+class Endpoint[R](
+  backend: SttpBackend[Task, Nothing]
+) extends baseclient.Endpoint[Effect[R, ?]] {
 
-  override val monadError = implicitly[MonadError[Effect, TwitchApiException]]
+  override val monadError = implicitly[MonadError[ZIO[R, TwitchApiException, ?], TwitchApiException]]
 
-  override val applicativeAsk = implicitly[ApplicativeAsk[Effect, TwitchEnv]]
-
-
-  override val sttpBackend = new SttpBackend[Effect, Nothing] {
-    override def send[T](request: Request[T, Nothing]): Effect[Response[T]] =
+  override val sttpBackend = new SttpBackend[Effect[R, ?], Nothing] {
+    override def send[T](request: Request[T, Nothing]): Effect[R, Response[T]] =
       backend.send(request).catchAll({
         case NonFatal(e) => ZIO.fail(TwitchConnectionException(e))
       })
     override def close(): Unit = backend.close
-    override def responseMonad = new com.softwaremill.sttp.MonadError[Effect] {
-      def flatMap[T, T2](fa: Effect[T])(f: T => Effect[T2]) =
+    override def responseMonad = new com.softwaremill.sttp.MonadError[Effect[R, ?]] {
+      def flatMap[T, T2](fa: Effect[R, T])(f: T => Effect[R, T2]) =
         fa.flatMap(f)
-      def error[T](t: Throwable): Effect[T] =
+      def error[T](t: Throwable): Effect[R, T] =
         ZIO.fail(t match {
           case e: TwitchApiException => e
           case e: Throwable => TwitchConnectionException(e)
         })
-      protected def handleWrappedError[T](rt: Effect[T])(h: PartialFunction[Throwable, Effect[T]]): Effect[T] =
-        rt.catchAll(h)
-      def map[T, T2](fa: Effect[T])(f: T => T2) =
+      protected def handleWrappedError[T](rt: Effect[R, T])(h: PartialFunction[Throwable, Effect[R, T]]) =
+        rt.catchSome(h)
+      def map[T, T2](fa: Effect[R, T])(f: T => T2) =
         fa.map(f)
-      def unit[T](t: T): Effect[T] =
+      def unit[T](t: T): Effect[R, T] =
         ZIO.succeed(t)
     }
   }
 }
 
-trait GamesEndpoint extends baseclient.GamesEndpoint[Effect]
+case class RecoverableTwitchState(val state: Ref[RecoverableTwitchEnv]) extends State[RecoverableTwitchEnv]
 
-trait UsersEndpoint extends baseclient.UsersEndpoint[Effect]
-
-trait StreamsEndpoint extends baseclient.StreamsEndpoint[Effect]
+trait GamesEndpoint[R] extends baseclient.GamesEndpoint[ZIO[R, TwitchApiException, ?]]
+trait UsersEndpoint[R] extends baseclient.UsersEndpoint[ZIO[R, TwitchApiException, ?]]
+trait StreamsEndpoint[R] extends baseclient.StreamsEndpoint[ZIO[R, TwitchApiException, ?]]
+trait VideosEndpoint[R] extends baseclient.VideosEndpoint[ZIO[R, TwitchApiException, ?]]

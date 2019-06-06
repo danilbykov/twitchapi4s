@@ -4,13 +4,19 @@ import java.time.Instant
 
 import scala.language.higherKinds
 
+import cats.mtl.ApplicativeAsk
+import cats.mtl.MonadState
+import cats.syntax.applicative._
+import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.softwaremill.sttp._
 import io.circe._
 
+import io.twitchapi4s.RecoverableTwitchEnv
 import io.twitchapi4s.ResponseHolder
 import io.twitchapi4s.ResponseHolderPage
+import io.twitchapi4s.TwitchEnv
 import io.twitchapi4s.model._
 
 object UsersEndpoint {
@@ -68,24 +74,57 @@ trait UsersEndpoint[F[_]] extends Endpoint[F] {
 
   val usersFollowsUrl = s"${root}helix/users/follows"
 
-  def getUsers(ids: List[String], logins: List[String]): F[List[TwitchUser]] =
+  def getUsers(
+    env: TwitchEnv
+  )(
+    ids: List[String],
+    logins: List[String]
+  ): F[List[TwitchUser]] =
     for {
-      env <- applicativeAsk.ask
-      request = sttp.get(uri"$usersUrl?id=$ids&login=$logins").twitchAuth(env)
-      maybeHttpResponse <- monadError.attempt(request.send())
+      request <- sttp.get(uri"$usersUrl?id=$ids&login=$logins").twitchAuth(env).pure
+      maybeHttpResponse <- request.send().attempt
       result <- parseHttpResponse[ResponseHolder[List[TwitchUser]]](maybeHttpResponse)
     } yield result.data
 
+  def getUsersR(
+    ids: List[String],
+    logins: List[String]
+  )(implicit aa: ApplicativeAsk[F, TwitchEnv]): F[List[TwitchUser]] =
+    loadWithApplicativeAsk((env) => getUsers(env)(ids, logins))
+
+  def getUsersS(
+    ids: List[String],
+    logins: List[String]
+  )(implicit ms: MonadState[F, RecoverableTwitchEnv]): F[List[TwitchUser]] =
+    loadWithMonadState((env) => getUsers(env)(ids, logins))
+
   def getFollows(
+    env: TwitchEnv
+  )(
     fromId: Option[String],
     toId: Option[String],
     after: Option[String] = None,
     first: Int = 20
   ): F[ResponseHolderPage[List[TwitchFollow]]] =
     for {
-      env <- applicativeAsk.ask
-      request = sttp.get(uri"$usersFollowsUrl?from_id=$fromId&to_id=$toId&first=$first&after=$after")
-      maybeHttpResponse <- monadError.attempt(request.twitchAuth(env).send())
+      request <- sttp.get(uri"$usersFollowsUrl?from_id=$fromId&to_id=$toId&first=$first&after=$after").pure
+      maybeHttpResponse <- request.twitchAuth(env).send().attempt
       result <- parseHttpResponse[ResponseHolderPage[List[TwitchFollow]]](maybeHttpResponse)
     } yield result
+
+  def getFollowsR(
+    fromId: Option[String],
+    toId: Option[String],
+    after: Option[String] = None,
+    first: Int = 20
+  )(implicit aa: ApplicativeAsk[F, TwitchEnv]): F[ResponseHolderPage[List[TwitchFollow]]] =
+    loadWithApplicativeAsk((env) => getFollows(env)(fromId, toId, after, first))
+
+  def getFollowsS(
+    fromId: Option[String],
+    toId: Option[String],
+    after: Option[String] = None,
+    first: Int = 20
+  )(implicit aa: MonadState[F, RecoverableTwitchEnv]): F[ResponseHolderPage[List[TwitchFollow]]] =
+    loadWithMonadState((env) => getFollows(env)(fromId, toId, after, first))
 }

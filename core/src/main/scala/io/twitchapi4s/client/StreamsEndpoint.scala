@@ -2,13 +2,18 @@ package io.twitchapi4s.client
 
 import scala.language.higherKinds
 
+import cats.mtl.ApplicativeAsk
+import cats.mtl.MonadState
+import cats.syntax.applicative._
+import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.softwaremill.sttp._
 import io.circe._
 
-import io.twitchapi4s.ResponseHolder
+import io.twitchapi4s.RecoverableTwitchEnv
 import io.twitchapi4s.ResponseHolderPage
+import io.twitchapi4s.TwitchEnv
 import io.twitchapi4s.model._
 
 object StreamsEndpoint {
@@ -46,6 +51,8 @@ trait StreamsEndpoint[F[_]] extends Endpoint[F] {
   val streamsUrl = s"${root}helix/streams"
 
   def getStreams(
+    env: TwitchEnv
+  )(
     communityIds: List[String],
     gameIds: List[String],
     languages: List[String],
@@ -56,9 +63,34 @@ trait StreamsEndpoint[F[_]] extends Endpoint[F] {
     first: Int = 20
   ): F[ResponseHolderPage[List[TwitchStream]]] =
     for {
-      env <- applicativeAsk.ask
-      request = sttp.get(uri"$streamsUrl?communityIds=$communityIds&game_id=$gameIds&language=$languages&user_id=$userIds&user_login=$userLogins&first=$first&before=$before&after=$after")
-      maybeHttpResponse <- monadError.attempt(request.twitchAuth(env).send())
+      request <- sttp.get(uri"$streamsUrl?communityIds=$communityIds&game_id=$gameIds&language=$languages&user_id=$userIds&user_login=$userLogins&first=$first&before=$before&after=$after").pure
+      maybeHttpResponse <- request.twitchAuth(env).send().attempt
       result <- parseHttpResponse[ResponseHolderPage[List[TwitchStream]]](maybeHttpResponse)
     } yield result
+
+  def getStreamsR(
+    communityIds: List[String],
+    gameIds: List[String],
+    languages: List[String],
+    userIds: List[String],
+    userLogins: List[String],
+    after: Option[String] = None,
+    before: Option[String] = None,
+    first: Int = 20
+  )(implicit aa: ApplicativeAsk[F, TwitchEnv]): F[ResponseHolderPage[List[TwitchStream]]] =
+    loadWithApplicativeAsk((env) => getStreams(env)(communityIds, gameIds, languages, userIds, userLogins,
+      after, before, first))
+
+  def getStreamsS(
+    communityIds: List[String],
+    gameIds: List[String],
+    languages: List[String],
+    userIds: List[String],
+    userLogins: List[String],
+    after: Option[String] = None,
+    before: Option[String] = None,
+    first: Int = 20
+  )(implicit ms: MonadState[F, RecoverableTwitchEnv]): F[ResponseHolderPage[List[TwitchStream]]] =
+    loadWithMonadState((env) => getStreams(env)(communityIds, gameIds, languages, userIds, userLogins,
+      after, before, first))
 }

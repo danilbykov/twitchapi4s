@@ -3,6 +3,11 @@ package io.twitchapi4s.model
 import java.time.Duration
 import java.time.Instant
 
+sealed trait VideoId
+case class GameVideoId(gameId: String) extends VideoId
+case class UserVideoId(userId: String) extends VideoId
+case class VideoIds(ids: List[String]) extends VideoId
+
 sealed abstract class VideoPeriod(val repr: String)
 case object AllTime extends VideoPeriod("all")
 case object Day extends VideoPeriod("day")
@@ -47,7 +52,7 @@ case class TwitchVideo(
   title: String,
   description: String,
   createdAt: Instant,
-  publishedAt: Instant,
+  publishedAt: Option[Instant],
   url: String,
   thumbnailUrl: String,
   viewable: ViewableType,

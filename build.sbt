@@ -14,8 +14,6 @@ val commonSettings = Seq(
   )
 )
 
-addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
-
 lazy val root = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
@@ -38,7 +36,9 @@ lazy val zioimpl = (project in file("implementations/zio"))
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-zio" % "1.0-RC4",
       "org.scalaz" %% "scalaz-zio-interop-cats" % "1.0-RC4",
-      "com.softwaremill.sttp" %% "async-http-client-backend-zio" % "1.5.17"
-    )
+      "com.softwaremill.sttp" %% "async-http-client-backend-zio" % "1.5.17",
+      "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+    ),
+    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
   )
   .dependsOn(root)
