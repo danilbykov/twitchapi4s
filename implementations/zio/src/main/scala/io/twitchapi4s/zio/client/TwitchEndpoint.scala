@@ -22,29 +22,25 @@ trait State[S] {
   def state: Ref[S]
 }
 
-object Endpoint {
+object TwitchEndpoint {
   type Effect[R, A] = ZIO[R, TwitchApiException, A]
 
   implicit def zioMonadState[S, R <: State[S], E]: MonadState[ZIO[R, E, ?], S] =
     new MonadState[ZIO[R, E, ?], S] {
       val monad: Monad[ZIO[R, E, ?]] = implicitly[Monad[ZIO[R, E, ?]]]
-
       def get: ZIO[R, E, S] = ZIO.accessM(_.state.get)
-
       def set(s: S): ZIO[R, E, Unit] = ZIO.accessM(_.state.set(s).unit)
-
       def inspect[A](f: S => A): ZIO[R, E, A] = ZIO.accessM(_.state.get.map(f))
-
       def modify(f: S => S): ZIO[R, E, Unit] = ZIO.accessM(_.state.update(f).unit)
     }
 }
 
-import Endpoint._
-class Endpoint[R](
+import TwitchEndpoint._
+class TwitchEndpoint[R](
   backend: SttpBackend[Task, Nothing]
-) extends baseclient.Endpoint[Effect[R, ?]] {
+) extends baseclient.TwitchEndpoint[Effect[R, ?]] {
 
-  override val monadError = implicitly[MonadError[ZIO[R, TwitchApiException, ?], TwitchApiException]]
+  override val monadError = implicitly[MonadError[Effect[R, ?], TwitchApiException]]
 
   override val sttpBackend = new SttpBackend[Effect[R, ?], Nothing] {
     override def send[T](request: Request[T, Nothing]): Effect[R, Response[T]] =
@@ -72,7 +68,7 @@ class Endpoint[R](
 
 case class RecoverableTwitchState(val state: Ref[RecoverableTwitchEnv]) extends State[RecoverableTwitchEnv]
 
-trait GamesEndpoint[R] extends baseclient.GamesEndpoint[ZIO[R, TwitchApiException, ?]]
-trait UsersEndpoint[R] extends baseclient.UsersEndpoint[ZIO[R, TwitchApiException, ?]]
-trait StreamsEndpoint[R] extends baseclient.StreamsEndpoint[ZIO[R, TwitchApiException, ?]]
-trait VideosEndpoint[R] extends baseclient.VideosEndpoint[ZIO[R, TwitchApiException, ?]]
+trait GamesEndpoint[R] extends baseclient.GamesEndpoint[Effect[R, ?]]
+trait UsersEndpoint[R] extends baseclient.UsersEndpoint[Effect[R, ?]]
+trait StreamsEndpoint[R] extends baseclient.StreamsEndpoint[Effect[R, ?]]
+trait VideosEndpoint[R] extends baseclient.VideosEndpoint[Effect[R, ?]]

@@ -26,9 +26,9 @@ object GamesEndpoint {
   }
 }
 
-trait GamesEndpoint[F[_]] extends Endpoint[F] {
+trait GamesEndpoint[F[_]] extends TwitchEndpoint[F] {
   import GamesEndpoint._
-  import Endpoint._
+  import TwitchEndpoint._
 
   val gamesUrl = s"${root}helix/games"
   val topGamesUrl = s"${root}helix/games/top"

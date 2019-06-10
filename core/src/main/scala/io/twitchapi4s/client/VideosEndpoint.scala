@@ -23,7 +23,7 @@ import io.twitchapi4s.TwitchEnv
 import io.twitchapi4s.model._
 
 object VideosEndpoint {
-  import Endpoint._
+  import TwitchEndpoint._
 
   implicit val videoDecoder = new Decoder[TwitchVideo] {
     final def apply(c: HCursor): Decoder.Result[TwitchVideo] =
@@ -66,9 +66,9 @@ object VideosEndpoint {
   }
 }
 
-trait VideosEndpoint[F[_]] extends Endpoint[F] {
+trait VideosEndpoint[F[_]] extends TwitchEndpoint[F] {
   import VideosEndpoint._
-  import Endpoint._
+  import TwitchEndpoint._
 
   val videosUrl = s"${root}helix/videos"
 

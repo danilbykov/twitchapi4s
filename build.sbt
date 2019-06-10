@@ -28,17 +28,38 @@ lazy val root = (project in file("core"))
     )
   )
 
+val commonImplSettings = Seq(
+  version := "1.0",
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  ),
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+)
+
 lazy val zioimpl = (project in file("implementations/zio"))
   .settings(commonSettings: _*)
+  .settings(commonImplSettings: _*)
   .settings(
     name := "twitchapi4s-zio",
-    version := "1.0",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-zio" % "1.0-RC4",
       "org.scalaz" %% "scalaz-zio-interop-cats" % "1.0-RC4",
-      "com.softwaremill.sttp" %% "async-http-client-backend-zio" % "1.5.17",
-      "org.scalatest" %% "scalatest" % "3.0.5" % "test"
-    ),
-    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+      "com.softwaremill.sttp" %% "async-http-client-backend-zio" % "1.5.17"
+    )
   )
   .dependsOn(root)
+
+lazy val moniximpl = (project in file("implementations/monix"))
+  .settings(commonSettings: _*)
+  .settings(commonImplSettings: _*)
+  .settings(
+    name := "twitchapi4s-monix",
+    libraryDependencies ++= Seq(
+      "io.monix" %% "monix" % "3.0.0-RC2",
+      "io.monix" %% "monix-execution" % "3.0.0-RC2",
+      "org.typelevel" %% "cats-effect" % "1.3.1",
+      "com.softwaremill.sttp" %% "async-http-client-backend-monix" % "1.5.17"
+    )
+  )
+  .dependsOn(root)
+

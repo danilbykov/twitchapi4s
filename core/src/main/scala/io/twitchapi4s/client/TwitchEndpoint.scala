@@ -23,7 +23,7 @@ import io.circe.parser
 
 import io.twitchapi4s._
 
-object Endpoint {
+object TwitchEndpoint {
 
   implicit class RequestTOps[U[_], T, +S](requestT: RequestT[U, T, S]) {
     def twitchAuth(env: TwitchEnv) =
@@ -69,8 +69,8 @@ object Endpoint {
   }
 }
 
-trait Endpoint[F[_]] {
-  import Endpoint._
+trait TwitchEndpoint[F[_]] {
+  import TwitchEndpoint._
 
   implicit val monadError: MonadError[F, TwitchApiException]
   //implicit val applicativeAsk: ApplicativeAsk[F, TwitchEnv]

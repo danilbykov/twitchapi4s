@@ -20,7 +20,7 @@ import io.twitchapi4s.TwitchEnv
 import io.twitchapi4s.model._
 
 object UsersEndpoint {
-  import Endpoint._
+  import TwitchEndpoint._
 
   implicit val userDecoder = new Decoder[TwitchUser] {
     final def apply(c: HCursor): Decoder.Result[TwitchUser] =
@@ -66,8 +66,8 @@ object UsersEndpoint {
   }
 }
 
-trait UsersEndpoint[F[_]] extends Endpoint[F] {
-  import Endpoint._
+trait UsersEndpoint[F[_]] extends TwitchEndpoint[F] {
+  import TwitchEndpoint._
   import UsersEndpoint._
 
   val usersUrl = s"${root}helix/users"

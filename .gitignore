@@ -5,3 +5,7 @@ target
 
 *.class
 *.log
+
+*.swn
+*.swo
+*.swp

@@ -15,9 +15,9 @@ import io.twitchapi4s.WithoutTokenEnv
 import io.twitchapi4s.model.GameVideoId
 import io.twitchapi4s.model.VideoIds
 import io.twitchapi4s.model.UserVideoId
-import io.twitchapi4s.zio.client.Endpoint._
+import io.twitchapi4s.zio.client.TwitchEndpoint._
 
-class EndpointTest extends WordSpecLike with Matchers {
+class TwitchTest extends WordSpecLike with Matchers {
 
   val backend = AsyncHttpClientZioBackend()
   val runtime = new DefaultRuntime {}
@@ -25,14 +25,15 @@ class EndpointTest extends WordSpecLike with Matchers {
   val clientId = ???
   val clientSecret = ???
   val env = ClientIdTwitchEnv(clientId)
+  val env2 = WithoutTokenEnv(clientId, clientSecret)
 
-  val endpoint = new Endpoint[TwitchEnv](backend)
+  val endpoint = new TwitchEndpoint[TwitchEnv](backend)
     with GamesEndpoint[TwitchEnv]
     with StreamsEndpoint[TwitchEnv]
     with UsersEndpoint[TwitchEnv]
     with VideosEndpoint[TwitchEnv]
 
-  val recoverableEndpoint = new Endpoint[RecoverableTwitchState](backend)
+  val recoverableEndpoint = new TwitchEndpoint[RecoverableTwitchState](backend)
     with GamesEndpoint[RecoverableTwitchState]
 
   "A TwitchEndpoint" should {
@@ -103,7 +104,7 @@ class EndpointTest extends WordSpecLike with Matchers {
     }
 
     "support with RecoverableTwitchEnv" in {
-      val ref = runtime.unsafeRunSync(Ref.make[RecoverableTwitchEnv](WithoutTokenEnv(clientId, clientSecret)))
+      val ref = runtime.unsafeRunSync(Ref.make[RecoverableTwitchEnv](env2))
         .toEither
         .right
         .get
@@ -114,6 +115,18 @@ class EndpointTest extends WordSpecLike with Matchers {
         starcraft should not be empty
         starcraft2 should not be empty
       }).provide(RecoverableTwitchState(ref))).bimap(throw _, identity)
+    }
+
+    "work without MonadState/ApplicativeAsk" in {
+      runtime.unsafeRunSync((for {
+        topGames <- endpoint.getTopGames(env)()
+        topGame = topGames.data.head
+        topGameById <- endpoint.getGames(env)(ids = List(topGame.id), names = Nil)
+        topGameByName <- endpoint.getGames(env)(ids = Nil, names = List(topGame.name))
+      } yield {
+        topGame shouldBe topGameById.head
+        topGame shouldBe topGameByName.head
+      }).provide(env)).bimap(throw _, identity)
     }
   }
 }
