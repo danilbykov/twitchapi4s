@@ -1,5 +1,6 @@
 
 val commonSettings = Seq(
+  organization := "io.twitchapi4s",
   scalaVersion := "2.12.8",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -11,14 +12,15 @@ val commonSettings = Seq(
     "-Ywarn-unused:params",
     "-Ywarn-unused:patvars",
     "-Ywarn-unused:privates"
-  )
+  ),
+  publishMavenStyle := true
 )
 
 lazy val root = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
-    name := "twitchapi4s",
-    version := "1.0",
+    name := "core",
+    version := "0.1",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-mtl-core" % "0.4.0",
       "org.typelevel" %% "cats-effect" % "1.3.1",
@@ -29,7 +31,7 @@ lazy val root = (project in file("core"))
   )
 
 val commonImplSettings = Seq(
-  version := "1.0",
+  version := "0.1",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.5" % "test"
   ),
@@ -40,7 +42,7 @@ lazy val zioimpl = (project in file("implementations/zio"))
   .settings(commonSettings: _*)
   .settings(commonImplSettings: _*)
   .settings(
-    name := "twitchapi4s-zio",
+    name := "zio",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-zio" % "1.0-RC4",
       "org.scalaz" %% "scalaz-zio-interop-cats" % "1.0-RC4",
@@ -53,7 +55,7 @@ lazy val moniximpl = (project in file("implementations/monix"))
   .settings(commonSettings: _*)
   .settings(commonImplSettings: _*)
   .settings(
-    name := "twitchapi4s-monix",
+    name := "monix",
     libraryDependencies ++= Seq(
       "io.monix" %% "monix" % "3.0.0-RC2",
       "io.monix" %% "monix-execution" % "3.0.0-RC2",
