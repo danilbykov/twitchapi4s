@@ -19,8 +19,8 @@ val commonSettings = Seq(
 lazy val root = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
-    name := "core",
-    version := "0.1",
+    name := "twitch-core",
+    version := "0.1.1",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-mtl-core" % "0.4.0",
       "org.typelevel" %% "cats-effect" % "1.3.1",
@@ -31,7 +31,7 @@ lazy val root = (project in file("core"))
   )
 
 val commonImplSettings = Seq(
-  version := "0.1",
+  version := "0.1.1",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.5" % "test"
   ),
@@ -42,10 +42,10 @@ lazy val zioimpl = (project in file("implementations/zio"))
   .settings(commonSettings: _*)
   .settings(commonImplSettings: _*)
   .settings(
-    name := "zio",
+    name := "twitch-zio",
     libraryDependencies ++= Seq(
-      "org.scalaz" %% "scalaz-zio" % "1.0-RC4",
-      "org.scalaz" %% "scalaz-zio-interop-cats" % "1.0-RC4",
+      "org.scalaz" %% "scalaz-zio" % "1.0-RC5",
+      "org.scalaz" %% "scalaz-zio-interop-cats" % "1.0-RC5",
       "com.softwaremill.sttp" %% "async-http-client-backend-zio" % "1.5.17"
     )
   )
@@ -55,7 +55,7 @@ lazy val moniximpl = (project in file("implementations/monix"))
   .settings(commonSettings: _*)
   .settings(commonImplSettings: _*)
   .settings(
-    name := "monix",
+    name := "twitch-monix",
     libraryDependencies ++= Seq(
       "io.monix" %% "monix" % "3.0.0-RC2",
       "io.monix" %% "monix-execution" % "3.0.0-RC2",

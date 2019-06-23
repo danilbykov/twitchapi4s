@@ -22,8 +22,8 @@ class TwitchTest extends WordSpecLike with Matchers {
   val backend = AsyncHttpClientZioBackend()
   val runtime = new DefaultRuntime {}
 
-  val clientId = ???
-  val clientSecret = ???
+  val clientId: String = ???
+  val clientSecret: String = ???
   val env = ClientIdTwitchEnv(clientId)
   val env2 = WithoutTokenEnv(clientId, clientSecret)
 
@@ -126,6 +126,19 @@ class TwitchTest extends WordSpecLike with Matchers {
       } yield {
         topGame shouldBe topGameById.head
         topGame shouldBe topGameByName.head
+      }).provide(env)).bimap(throw _, identity)
+    }
+
+    "load multiple games" in {
+      runtime.unsafeRunSync((for {
+        topGames <- endpoint.getTopGamesR()
+        firstGame = topGames.data.head
+        secondGame = topGames.data.tail.head
+        topGamesById <- endpoint.getGamesR(ids = List(firstGame.id, secondGame.id), names = Nil)
+        topGamesByName <- endpoint.getGamesR(ids = Nil, names = List(firstGame.name, secondGame.name))
+      } yield {
+        topGamesById should contain theSameElementsAs List(firstGame, secondGame)
+        topGamesByName should contain theSameElementsAs List(firstGame, secondGame)
       }).provide(env)).bimap(throw _, identity)
     }
   }

@@ -39,9 +39,17 @@ case class Token(
   tokenType: String
 )
 
-sealed abstract class TwitchApiException extends Exception
-case class TwitchResponseError(response: FailureResponse) extends TwitchApiException
-case class UnauthorizedException(message: Option[String]) extends TwitchApiException
-case class TwitchParseException(message: String, rawJson: String) extends TwitchApiException
-case class RateLimitExceeded(reset: Long) extends TwitchApiException
-case class TwitchConnectionException(e: Throwable) extends TwitchApiException
+sealed abstract class TwitchApiException(message: String, throwable: Throwable)
+  extends Exception(message, throwable) {
+  def this(message: String) = this(message, null)
+}
+case class TwitchResponseError(response: FailureResponse)
+  extends TwitchApiException(response.toString)
+case class UnauthorizedException(message: Option[String])
+  extends TwitchApiException(message.getOrElse(""))
+case class TwitchParseException(message: String, rawJson: String)
+  extends TwitchApiException(s"$message while parsing $rawJson")
+case class RateLimitExceeded(reset: Long)
+  extends TwitchApiException(s"Rate limit exceeded. Reset is at $reset")
+case class TwitchConnectionException(e: Throwable)
+  extends TwitchApiException("Connection problem", e)
