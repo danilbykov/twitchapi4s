@@ -27,7 +27,7 @@ object StreamsEndpoint {
         id <- c.downField("id").as[String]
         language <- c.downField("language").as[String]
         startedAt <- decodeInstant(c.downField("started_at").as[String], defaultFormatter)
-        tagIds <- c.downField("tag_ids").as[List[String]]
+        tagIds <- c.downField("tag_ids").as[Option[List[String]]]
         thumbnailUrl <- c.downField("thumbnail_url").as[String]
         title <- c.downField("title").as[String]
         tpe <-
@@ -39,8 +39,8 @@ object StreamsEndpoint {
         userId <- c.downField("user_id").as[String]
         userName <- c.downField("user_name").as[String]
         viewerCount <- c.downField("viewer_count").as[Int]
-      } yield TwitchStream(communityIds, gameId, id, language, startedAt, tagIds, thumbnailUrl,
-        title, tpe, userId, userName, viewerCount)
+      } yield TwitchStream(communityIds, gameId, id, language, startedAt, tagIds.getOrElse(Nil),
+        thumbnailUrl, title, tpe, userId, userName, viewerCount)
   }
 }
 
