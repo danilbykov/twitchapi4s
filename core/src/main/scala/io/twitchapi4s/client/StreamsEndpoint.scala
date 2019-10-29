@@ -22,7 +22,7 @@ object StreamsEndpoint {
   implicit val videoDecoder = new Decoder[TwitchStream] {
     final def apply(c: HCursor): Decoder.Result[TwitchStream] =
       for {
-        communityIds <- c.downField("community_ids").as[List[String]]
+        communityIds <- c.downField("community_ids").as[Option[List[String]]]
         gameId <- c.downField("game_id").as[String]
         id <- c.downField("id").as[String]
         language <- c.downField("language").as[String]
@@ -39,7 +39,7 @@ object StreamsEndpoint {
         userId <- c.downField("user_id").as[String]
         userName <- c.downField("user_name").as[String]
         viewerCount <- c.downField("viewer_count").as[Int]
-      } yield TwitchStream(communityIds, gameId, id, language, startedAt, tagIds.getOrElse(Nil),
+      } yield TwitchStream(communityIds.getOrElse(Nil), gameId, id, language, startedAt, tagIds.getOrElse(Nil),
         thumbnailUrl, title, tpe, userId, userName, viewerCount)
   }
 }

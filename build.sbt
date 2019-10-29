@@ -20,7 +20,7 @@ lazy val root = (project in file("core"))
   .settings(commonSettings: _*)
   .settings(
     name := "twitch-core",
-    version := "0.1.2",
+    version := "0.1.3",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-mtl-core" % "0.4.0",
       "org.typelevel" %% "cats-effect" % "1.3.1",
@@ -31,7 +31,7 @@ lazy val root = (project in file("core"))
   )
 
 val commonImplSettings = Seq(
-  version := "0.1.2",
+  version := "0.1.3",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.5" % "test"
   ),
